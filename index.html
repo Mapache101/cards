@@ -135,7 +135,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction, collection, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Config (Provided by Environment) ---
@@ -164,15 +164,11 @@
         const chatInput = document.getElementById('chat-input');
         const chatMessages = document.getElementById('chat-messages');
 
-        // --- Firebase Initialization ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        // --- App State ---
         let currentUser = null;
         let unsubscribeFromGame = null;
         let unsubscribeFromChat = null;
-
+        
         // --- Deck of Cards ---
         const DECK = [
             'https://deckofcardsapi.com/static/img/AS.png', 'https://deckofcardsapi.com/static/img/KS.png',
@@ -185,257 +181,274 @@
             'https://deckofcardsapi.com/static/img/QH.png', 'https://deckofcardsapi.com/static/img/JH.png',
         ];
 
-        // --- Authentication ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-            } else {
-                signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
-            }
-        });
-
-        // --- Game Logic ---
-        joinButton.addEventListener('click', async () => {
-            const playerName = playerNameInput.value.trim();
-            const roomCode = roomCodeInput.value.trim().toLowerCase(); // Room codes are case-insensitive
-
-            if (!playerName || !roomCode) {
-                errorMessage.textContent = "Name and Room Code are required.";
-                return;
-            }
-            if (!currentUser) {
-                errorMessage.textContent = "Authenticating... please wait.";
-                return;
-            }
-            
-            errorMessage.textContent = "";
+        // --- Main Initialization ---
+        if (!firebaseConfig || !firebaseConfig.apiKey) {
+            errorMessage.textContent = 'Firebase config is invalid.';
             joinButton.disabled = true;
-            joinButton.textContent = "Joining...";
+            joinButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+        } else {
+            // --- Firebase Initialization ---
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
 
-            try {
-                await joinOrCreateGame(playerName, roomCode);
-                loginModal.classList.add('hidden');
-                gameContainer.classList.remove('hidden');
-            } catch (error) {
-                errorMessage.textContent = error.message;
-                joinButton.disabled = false;
-                joinButton.textContent = "Join / Create Game";
-            }
-        });
-
-        async function joinOrCreateGame(playerName, roomCode) {
-            const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-            
-            await runTransaction(db, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-
-                if (!roomDoc.exists()) {
-                    // --- Create a New Game Room ---
-                    const shuffledDeck = [...DECK].sort(() => Math.random() - 0.5);
-                    const player1Hand = shuffledDeck.splice(0, 5); // Deal 5 cards
-
-                    const newGameData = {
-                        players: {
-                            [currentUser.uid]: { name: playerName, playerNum: 1 }
-                        },
-                        hands: {
-                            [currentUser.uid]: player1Hand
-                        },
-                        shared_cards: [],
-                        deck: shuffledDeck,
-                        last_updated: serverTimestamp(),
-                        player_count: 1
-                    };
-                    transaction.set(roomRef, newGameData);
+            // --- Authentication ---
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
                 } else {
-                    // --- Join an Existing Game Room ---
-                    const gameData = roomDoc.data();
-                    if (gameData.player_count >= 2 && !gameData.players[currentUser.uid]) {
-                        throw new Error("This room is full.");
-                    }
-                    
-                    if (!gameData.players[currentUser.uid]) {
-                         const remainingDeck = gameData.deck;
-                         const player2Hand = remainingDeck.splice(0, 5);
-                    
-                        transaction.update(roomRef, {
-                            [`players.${currentUser.uid}`]: { name: playerName, playerNum: 2 },
-                            [`hands.${currentUser.uid}`]: player2Hand,
-                            deck: remainingDeck,
-                            player_count: 2
-                        });
+                    try {
+                        const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                        if (token) {
+                            await signInWithCustomToken(auth, token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch(error) {
+                        console.error("Authentication failed:", error);
+                        errorMessage.textContent = "Authentication failed.";
+                        joinButton.disabled = true;
                     }
                 }
             });
-            
-            subscribeToGame(roomCode);
-        }
 
-        function subscribeToGame(roomCode) {
-            const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-            if(unsubscribeFromGame) unsubscribeFromGame();
+            // --- Game Logic ---
+            joinButton.addEventListener('click', async () => {
+                const playerName = playerNameInput.value.trim();
+                const roomCode = roomCodeInput.value.trim().toLowerCase(); // Room codes are case-insensitive
 
-            unsubscribeFromGame = onSnapshot(roomRef, (doc) => {
-                if(doc.exists()){
-                    renderGameState(doc.data(), roomCode);
-                } else {
-                    console.warn("Game room not found!");
-                    gameContainer.innerHTML = `<p class="text-center text-2xl">Game room ${roomCode} has been closed.</p>`;
+                if (!playerName || !roomCode) {
+                    errorMessage.textContent = "Name and Room Code are required.";
+                    return;
+                }
+                if (!currentUser) {
+                    errorMessage.textContent = "Authenticating... please wait.";
+                    return;
+                }
+                
+                errorMessage.textContent = "";
+                joinButton.disabled = true;
+                joinButton.textContent = "Joining...";
+
+                try {
+                    await joinOrCreateGame(playerName, roomCode, db);
+                    loginModal.classList.add('hidden');
+                    gameContainer.classList.remove('hidden');
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    joinButton.disabled = false;
+                    joinButton.textContent = "Join / Create Game";
                 }
             });
-            subscribeToChat(roomCode); // Also subscribe to chat
-        }
-        
-        function renderGameState(gameData, roomCode) {
-            // ... (rest of renderGameState is unchanged)
-            if (!currentUser || !gameData.players[currentUser.uid]) return;
 
-            const myHand = gameData.hands[currentUser.uid] || [];
-            const sharedCards = gameData.shared_cards || [];
-            
-            const myPlayerInfo = gameData.players[currentUser.uid];
-            roomCodeDisplay.textContent = roomCode;
-            playerNameDisplay.textContent = myPlayerInfo.name;
-            playerIdDisplay.textContent = currentUser.uid.slice(0, 8);
-            
-            const opponentId = Object.keys(gameData.players).find(id => id !== currentUser.uid);
-            if(opponentId){
-                opponentInfo.classList.remove('hidden');
-                opponentNameDisplay.textContent = gameData.players[opponentId].name;
-            } else {
-                opponentInfo.classList.add('hidden');
-                opponentNameDisplay.textContent = "Waiting for player...";
-            }
-            
-            sharedArea.innerHTML = '';
-            if (sharedCards.length > 0) {
-                sharedCards.forEach(cardData => {
-                    const cardEl = createCardElement(cardData.card, 'shared');
-                    sharedArea.appendChild(cardEl);
-                });
-            } else {
-                sharedArea.innerHTML = `<p class="text-gray-300">Shared Area - Drag cards here to play</p>`;
-            }
-
-            playerHand.innerHTML = '';
-            if(myHand.length > 0) {
-                myHand.forEach(cardSrc => {
-                    const cardEl = createCardElement(cardSrc, 'hand');
-                    cardEl.draggable = true;
-                    cardEl.addEventListener('dragstart', (e) => handleDragStart(e, cardSrc));
-                    playerHand.appendChild(cardEl);
-                });
-            } else {
-                playerHand.innerHTML = `<p class="text-gray-300">Your hand is empty</p>`;
-            }
-        }
-        
-        function createCardElement(src, type) {
-             const cardDiv = document.createElement('div');
-             cardDiv.className = 'card';
-             const img = document.createElement('img');
-             img.src = src;
-             img.onerror = () => { img.src = 'https://placehold.co/100x140/000000/FFFFFF?text=Card'; }; // Fallback image
-             cardDiv.appendChild(img);
-             return cardDiv;
-        }
-
-        // --- Drag and Drop Logic ---
-        let draggedCardSrc = null;
-        function handleDragStart(e, cardSrc) { /* ... unchanged ... */ 
-            draggedCardSrc = cardSrc;
-            e.dataTransfer.effectAllowed = 'move';
-        }
-        sharedArea.addEventListener('dragover', (e) => { /* ... unchanged ... */
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            sharedArea.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
-        });
-        sharedArea.addEventListener('dragleave', () => { /* ... unchanged ... */
-             sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-        });
-        sharedArea.addEventListener('drop', async (e) => { /* ... unchanged ... */
-            e.preventDefault();
-            sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-            if (draggedCardSrc) {
-                await playCard(draggedCardSrc);
-                draggedCardSrc = null;
-            }
-        });
-        async function playCard(cardSrc) { /* ... unchanged ... */
-            const roomCode = roomCodeInput.value.trim().toLowerCase();
-            const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-            try {
+            async function joinOrCreateGame(playerName, roomCode, db) {
+                const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
+                
                 await runTransaction(db, async (transaction) => {
                     const roomDoc = await transaction.get(roomRef);
-                    if (!roomDoc.exists()) throw new Error("Room does not exist.");
-                    const gameData = roomDoc.data();
-                    const currentHand = gameData.hands[currentUser.uid] || [];
-                    const cardIndex = currentHand.indexOf(cardSrc);
-                    if (cardIndex > -1) {
-                        currentHand.splice(cardIndex, 1);
-                        const newSharedCards = [...gameData.shared_cards, { card: cardSrc, playedBy: currentUser.uid }];
-                        transaction.update(roomRef, {
-                            [`hands.${currentUser.uid}`]: currentHand,
-                            shared_cards: newSharedCards
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error("Failed to play card:", error);
-                errorMessage.textContent = "Error playing card. Please try again.";
-            }
-        }
 
-        // --- Chat Logic ---
-        function subscribeToChat(roomCode) {
-            const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
-            const q = query(messagesRef, orderBy("timestamp"));
+                    if (!roomDoc.exists()) {
+                        // --- Create a New Game Room ---
+                        const shuffledDeck = [...DECK].sort(() => Math.random() - 0.5);
+                        const player1Hand = shuffledDeck.splice(0, 5); // Deal 5 cards
 
-            if(unsubscribeFromChat) unsubscribeFromChat();
-
-            unsubscribeFromChat = onSnapshot(q, (snapshot) => {
-                chatMessages.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const msg = doc.data();
-                    const msgDiv = document.createElement('div');
-                    msgDiv.classList.add('p-2', 'rounded-lg', 'max-w-xs');
-
-                    if (msg.senderId === currentUser.uid) {
-                        msgDiv.classList.add('bg-blue-600', 'self-end', 'ml-auto');
-                        msgDiv.innerHTML = `<p class="text-white">${msg.text}</p>`;
+                        const newGameData = {
+                            players: { [currentUser.uid]: { name: playerName, playerNum: 1 } },
+                            hands: { [currentUser.uid]: player1Hand },
+                            shared_cards: [],
+                            deck: shuffledDeck,
+                            last_updated: serverTimestamp(),
+                            player_count: 1
+                        };
+                        transaction.set(roomRef, newGameData);
                     } else {
-                        msgDiv.classList.add('bg-gray-600', 'self-start', 'mr-auto');
-                        msgDiv.innerHTML = `<p class="font-bold text-xs text-cyan-300">${msg.senderName}</p><p class="text-white">${msg.text}</p>`;
+                        // --- Join an Existing Game Room ---
+                        const gameData = roomDoc.data();
+                        if (gameData.player_count >= 2 && !gameData.players[currentUser.uid]) {
+                            throw new Error("This room is full.");
+                        }
+                        
+                        if (!gameData.players[currentUser.uid]) {
+                             const remainingDeck = gameData.deck;
+                             const player2Hand = remainingDeck.splice(0, 5);
+                        
+                            transaction.update(roomRef, {
+                                [`players.${currentUser.uid}`]: { name: playerName, playerNum: 2 },
+                                [`hands.${currentUser.uid}`]: player2Hand,
+                                deck: remainingDeck,
+                                player_count: 2
+                            });
+                        }
                     }
-                    chatMessages.appendChild(msgDiv);
                 });
-                // Auto-scroll to bottom
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-        }
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const messageText = chatInput.value.trim();
-            if (messageText && currentUser) {
-                const roomCode = roomCodeInput.value.trim().toLowerCase();
-                const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
                 
-                try {
-                    await addDoc(messagesRef, {
-                        text: messageText,
-                        senderId: currentUser.uid,
-                        senderName: playerNameInput.value.trim(),
-                        timestamp: serverTimestamp()
+                subscribeToGame(roomCode, db);
+            }
+
+            function subscribeToGame(roomCode, db) {
+                const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
+                if(unsubscribeFromGame) unsubscribeFromGame();
+
+                unsubscribeFromGame = onSnapshot(roomRef, (doc) => {
+                    if(doc.exists()){
+                        renderGameState(doc.data(), roomCode);
+                    } else {
+                        console.warn("Game room not found!");
+                        gameContainer.innerHTML = `<p class="text-center text-2xl">Game room ${roomCode} has been closed.</p>`;
+                    }
+                });
+                subscribeToChat(roomCode, db); // Also subscribe to chat
+            }
+            
+            function renderGameState(gameData, roomCode) {
+                if (!currentUser || !gameData.players[currentUser.uid]) return;
+
+                const myHand = gameData.hands[currentUser.uid] || [];
+                const sharedCards = gameData.shared_cards || [];
+                
+                const myPlayerInfo = gameData.players[currentUser.uid];
+                roomCodeDisplay.textContent = roomCode;
+                playerNameDisplay.textContent = myPlayerInfo.name;
+                playerIdDisplay.textContent = currentUser.uid.slice(0, 8);
+                
+                const opponentId = Object.keys(gameData.players).find(id => id !== currentUser.uid);
+                if(opponentId){
+                    opponentInfo.classList.remove('hidden');
+                    opponentNameDisplay.textContent = gameData.players[opponentId].name;
+                } else {
+                    opponentInfo.classList.add('hidden');
+                    opponentNameDisplay.textContent = "Waiting for player...";
+                }
+                
+                sharedArea.innerHTML = '';
+                if (sharedCards.length > 0) {
+                    sharedCards.forEach(cardData => {
+                        const cardEl = createCardElement(cardData.card, 'shared');
+                        sharedArea.appendChild(cardEl);
                     });
-                    chatInput.value = ''; // Clear input
-                } catch (error) {
-                    console.error("Error sending message: ", error);
+                } else {
+                    sharedArea.innerHTML = `<p class="text-gray-300">Shared Area - Drag cards here to play</p>`;
+                }
+
+                playerHand.innerHTML = '';
+                if(myHand.length > 0) {
+                    myHand.forEach(cardSrc => {
+                        const cardEl = createCardElement(cardSrc, 'hand');
+                        cardEl.draggable = true;
+                        cardEl.addEventListener('dragstart', (e) => handleDragStart(e, cardSrc));
+                        playerHand.appendChild(cardEl);
+                    });
+                } else {
+                    playerHand.innerHTML = `<p class="text-gray-300">Your hand is empty</p>`;
                 }
             }
-        });
+            
+            function createCardElement(src, type) {
+                 const cardDiv = document.createElement('div');
+                 cardDiv.className = 'card';
+                 const img = document.createElement('img');
+                 img.src = src;
+                 img.onerror = () => { img.src = 'https://placehold.co/100x140/000000/FFFFFF?text=Card'; }; // Fallback image
+                 cardDiv.appendChild(img);
+                 return cardDiv;
+            }
 
+            // --- Drag and Drop Logic ---
+            let draggedCardSrc = null;
+            function handleDragStart(e, cardSrc) { 
+                draggedCardSrc = cardSrc;
+                e.dataTransfer.effectAllowed = 'move';
+            }
+            sharedArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                sharedArea.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
+            });
+            sharedArea.addEventListener('dragleave', () => {
+                 sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+            });
+            sharedArea.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+                if (draggedCardSrc) {
+                    await playCard(draggedCardSrc, db);
+                    draggedCardSrc = null;
+                }
+            });
+            async function playCard(cardSrc, db) {
+                const roomCode = roomCodeInput.value.trim().toLowerCase();
+                const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const roomDoc = await transaction.get(roomRef);
+                        if (!roomDoc.exists()) throw new Error("Room does not exist.");
+                        const gameData = roomDoc.data();
+                        const currentHand = gameData.hands[currentUser.uid] || [];
+                        const cardIndex = currentHand.indexOf(cardSrc);
+                        if (cardIndex > -1) {
+                            currentHand.splice(cardIndex, 1);
+                            const newSharedCards = [...gameData.shared_cards, { card: cardSrc, playedBy: currentUser.uid }];
+                            transaction.update(roomRef, {
+                                [`hands.${currentUser.uid}`]: currentHand,
+                                shared_cards: newSharedCards
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error("Failed to play card:", error);
+                    errorMessage.textContent = "Error playing card. Please try again.";
+                }
+            }
+
+            // --- Chat Logic ---
+            function subscribeToChat(roomCode, db) {
+                const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
+                const q = query(messagesRef, orderBy("timestamp"));
+
+                if(unsubscribeFromChat) unsubscribeFromChat();
+
+                unsubscribeFromChat = onSnapshot(q, (snapshot) => {
+                    chatMessages.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const msg = doc.data();
+                        const msgDiv = document.createElement('div');
+                        msgDiv.classList.add('p-2', 'rounded-lg', 'max-w-xs');
+
+                        if (msg.senderId === currentUser.uid) {
+                            msgDiv.classList.add('bg-blue-600', 'self-end', 'ml-auto');
+                            msgDiv.innerHTML = `<p class="text-white">${msg.text}</p>`;
+                        } else {
+                            msgDiv.classList.add('bg-gray-600', 'self-start', 'mr-auto');
+                            msgDiv.innerHTML = `<p class="font-bold text-xs text-cyan-300">${msg.senderName}</p><p class="text-white">${msg.text}</p>`;
+                        }
+                        chatMessages.appendChild(msgDiv);
+                    });
+                    // Auto-scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            }
+
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const messageText = chatInput.value.trim();
+                if (messageText && currentUser) {
+                    const roomCode = roomCodeInput.value.trim().toLowerCase();
+                    const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
+                    
+                    try {
+                        await addDoc(messagesRef, {
+                            text: messageText,
+                            senderId: currentUser.uid,
+                            senderName: playerNameInput.value.trim(),
+                            timestamp: serverTimestamp()
+                        });
+                        chatInput.value = ''; // Clear input
+                    } catch (error) {
+                        console.error("Error sending message: ", error);
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
