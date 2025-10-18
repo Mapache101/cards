@@ -53,39 +53,70 @@
         #opponent-info {
             background-color: rgba(0,0,0,0.3);
         }
+
+        /* Chat styles */
+        #chat-messages {
+            scroll-behavior: smooth;
+        }
+         /* Hide scrollbar but allow scrolling */
+        #chat-messages::-webkit-scrollbar {
+            width: 0.5em;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="w-screen h-screen overflow-hidden text-white">
 
     <!-- Game UI (hidden by default) -->
-    <main id="game-container" class="hidden h-full flex flex-col p-4 md:p-8 space-y-4">
-        <div class="flex justify-between items-center p-2 rounded-lg" style="background-color: rgba(0,0,0,0.3);">
-            <div>
-                <h1 class="text-xl font-bold">Card Game</h1>
-                <p class="text-sm">Room Code: <span id="room-code-display" class="font-mono bg-gray-800 px-2 py-1 rounded"></span></p>
+    <main id="game-container" class="hidden h-full flex flex-col md:flex-row p-4 md:p-8 gap-4">
+        <!-- Main Game Area -->
+        <div class="flex-grow flex flex-col space-y-4">
+            <div class="flex justify-between items-center p-2 rounded-lg" style="background-color: rgba(0,0,0,0.3);">
+                <div>
+                    <h1 class="text-xl font-bold">Card Game</h1>
+                    <p class="text-sm">Room Code: <span id="room-code-display" class="font-mono bg-gray-800 px-2 py-1 rounded"></span></p>
+                </div>
+                <div class="text-right">
+                    <p>You: <span id="player-name-display" class="font-bold"></span> (<span id="player-id-display" class="font-mono text-xs"></span>)</p>
+                    <div id="opponent-info" class="hidden p-2 rounded-lg mt-1">
+                         Opponent: <span id="opponent-name-display" class="font-bold"></span>
+                    </div>
+                </div>
             </div>
-            <div class="text-right">
-                <p>You: <span id="player-name-display" class="font-bold"></span> (<span id="player-id-display" class="font-mono text-xs"></span>)</p>
-                <div id="opponent-info" class="hidden p-2 rounded-lg mt-1">
-                     Opponent: <span id="opponent-name-display" class="font-bold"></span>
+
+            <!-- Shared Playing Area -->
+            <div id="shared-area" class="flex-grow w-full rounded-xl p-4 flex items-center justify-center gap-4 flex-wrap">
+                <!-- Shared cards will appear here -->
+                <p class="text-gray-300">Shared Area - Drag cards here to play</p>
+            </div>
+
+            <!-- Player's Hand -->
+            <div id="player-hand-container" class="w-full">
+                <h2 class="text-lg font-semibold mb-2">Your Hand</h2>
+                <div id="player-hand" class="w-full bg-black bg-opacity-30 rounded-xl p-4 flex items-center justify-center gap-4">
+                     <!-- Player's cards will appear here -->
+                     <p class="text-gray-300">Waiting for game to start...</p>
                 </div>
             </div>
         </div>
-
-        <!-- Shared Playing Area -->
-        <div id="shared-area" class="flex-grow w-full rounded-xl p-4 flex items-center justify-center gap-4 flex-wrap">
-            <!-- Shared cards will appear here -->
-            <p class="text-gray-300">Shared Area - Drag cards here to play</p>
-        </div>
-
-        <!-- Player's Hand -->
-        <div id="player-hand-container" class="w-full">
-            <h2 class="text-lg font-semibold mb-2">Your Hand</h2>
-            <div id="player-hand" class="w-full bg-black bg-opacity-30 rounded-xl p-4 flex items-center justify-center gap-4">
-                 <!-- Player's cards will appear here -->
-                 <p class="text-gray-300">Waiting for game to start...</p>
+        <!-- Chat Area -->
+        <div id="chat-container" class="w-full md:w-80 lg:w-96 bg-black bg-opacity-40 rounded-xl flex flex-col p-4">
+            <h2 class="text-lg font-semibold mb-2 border-b border-gray-600 pb-2">Chat</h2>
+            <div id="chat-messages" class="flex-grow overflow-y-auto pr-2 space-y-2">
+                <!-- Chat messages will appear here -->
             </div>
+            <form id="chat-form" class="mt-4 flex gap-2">
+                <input id="chat-input" type="text" placeholder="Type a message..." class="flex-grow p-2 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Send</button>
+            </form>
         </div>
+
     </main>
 
     <!-- Login Modal (visible by default) -->
@@ -94,7 +125,6 @@
             <h2 class="text-3xl font-bold text-center mb-6">Join a Game</h2>
             <div class="space-y-4">
                 <input id="player-name-input" type="text" placeholder="Enter your name" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <!-- CORRECTED LINE: bg-gamma-700 is now bg-gray-700 -->
                 <input id="room-code-input" type="text" placeholder="Enter room code" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
              <p id="error-message" class="text-red-400 text-sm mt-4 h-5 text-center"></p>
@@ -106,10 +136,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction, collection, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Config (Provided by Environment) ---
-        // CORRECTED: Using secure environment variables instead of hardcoded keys
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-card-game';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
@@ -129,6 +158,11 @@
         const opponentNameDisplay = document.getElementById('opponent-name-display');
         const sharedArea = document.getElementById('shared-area');
         const playerHand = document.getElementById('player-hand');
+        
+        // --- Chat UI Elements ---
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
 
         // --- Firebase Initialization ---
         const app = initializeApp(firebaseConfig);
@@ -136,7 +170,8 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let unsubscribeFromGame = null; // To stop listening to game updates
+        let unsubscribeFromGame = null;
+        let unsubscribeFromChat = null;
 
         // --- Deck of Cards ---
         const DECK = [
@@ -219,7 +254,6 @@
                         throw new Error("This room is full.");
                     }
                     
-                    // If user is not already in the game, add them
                     if (!gameData.players[currentUser.uid]) {
                          const remainingDeck = gameData.deck;
                          const player2Hand = remainingDeck.splice(0, 5);
@@ -234,38 +268,36 @@
                 }
             });
             
-            // Subscribe to game updates
             subscribeToGame(roomCode);
         }
 
         function subscribeToGame(roomCode) {
             const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-            if(unsubscribeFromGame) unsubscribeFromGame(); // Unsubscribe from previous game if any
+            if(unsubscribeFromGame) unsubscribeFromGame();
 
             unsubscribeFromGame = onSnapshot(roomRef, (doc) => {
                 if(doc.exists()){
                     renderGameState(doc.data(), roomCode);
                 } else {
-                    // Handle game deletion or not found
                     console.warn("Game room not found!");
                     gameContainer.innerHTML = `<p class="text-center text-2xl">Game room ${roomCode} has been closed.</p>`;
                 }
             });
+            subscribeToChat(roomCode); // Also subscribe to chat
         }
         
         function renderGameState(gameData, roomCode) {
-            if (!currentUser || !gameData.players[currentUser.uid]) return; // Not part of this game
+            // ... (rest of renderGameState is unchanged)
+            if (!currentUser || !gameData.players[currentUser.uid]) return;
 
             const myHand = gameData.hands[currentUser.uid] || [];
             const sharedCards = gameData.shared_cards || [];
             
-            // --- Display Room & Player Info ---
             const myPlayerInfo = gameData.players[currentUser.uid];
             roomCodeDisplay.textContent = roomCode;
             playerNameDisplay.textContent = myPlayerInfo.name;
             playerIdDisplay.textContent = currentUser.uid.slice(0, 8);
             
-            // --- Display Opponent Info ---
             const opponentId = Object.keys(gameData.players).find(id => id !== currentUser.uid);
             if(opponentId){
                 opponentInfo.classList.remove('hidden');
@@ -275,8 +307,7 @@
                 opponentNameDisplay.textContent = "Waiting for player...";
             }
             
-            // --- Render Shared Cards ---
-            sharedArea.innerHTML = ''; // Clear previous
+            sharedArea.innerHTML = '';
             if (sharedCards.length > 0) {
                 sharedCards.forEach(cardData => {
                     const cardEl = createCardElement(cardData.card, 'shared');
@@ -286,12 +317,10 @@
                 sharedArea.innerHTML = `<p class="text-gray-300">Shared Area - Drag cards here to play</p>`;
             }
 
-            // --- Render Player's Hand ---
-            playerHand.innerHTML = ''; // Clear previous
+            playerHand.innerHTML = '';
             if(myHand.length > 0) {
                 myHand.forEach(cardSrc => {
                     const cardEl = createCardElement(cardSrc, 'hand');
-                    // Add drag functionality
                     cardEl.draggable = true;
                     cardEl.addEventListener('dragstart', (e) => handleDragStart(e, cardSrc));
                     playerHand.appendChild(cardEl);
@@ -311,25 +340,21 @@
              return cardDiv;
         }
 
-        // --- Drag and Drop Logic for Playing a Card ---
+        // --- Drag and Drop Logic ---
         let draggedCardSrc = null;
-
-        function handleDragStart(e, cardSrc) {
+        function handleDragStart(e, cardSrc) { /* ... unchanged ... */ 
             draggedCardSrc = cardSrc;
             e.dataTransfer.effectAllowed = 'move';
         }
-
-        sharedArea.addEventListener('dragover', (e) => {
+        sharedArea.addEventListener('dragover', (e) => { /* ... unchanged ... */
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             sharedArea.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
         });
-
-        sharedArea.addEventListener('dragleave', () => {
+        sharedArea.addEventListener('dragleave', () => { /* ... unchanged ... */
              sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
         });
-        
-        sharedArea.addEventListener('drop', async (e) => {
+        sharedArea.addEventListener('drop', async (e) => { /* ... unchanged ... */
             e.preventDefault();
             sharedArea.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
             if (draggedCardSrc) {
@@ -337,27 +362,19 @@
                 draggedCardSrc = null;
             }
         });
-        
-        async function playCard(cardSrc) {
+        async function playCard(cardSrc) { /* ... unchanged ... */
             const roomCode = roomCodeInput.value.trim().toLowerCase();
             const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-
             try {
                 await runTransaction(db, async (transaction) => {
                     const roomDoc = await transaction.get(roomRef);
                     if (!roomDoc.exists()) throw new Error("Room does not exist.");
-
                     const gameData = roomDoc.data();
                     const currentHand = gameData.hands[currentUser.uid] || [];
-                    
-                    // Remove card from hand
                     const cardIndex = currentHand.indexOf(cardSrc);
                     if (cardIndex > -1) {
                         currentHand.splice(cardIndex, 1);
-                        
-                        // Add card to shared area
                         const newSharedCards = [...gameData.shared_cards, { card: cardSrc, playedBy: currentUser.uid }];
-
                         transaction.update(roomRef, {
                             [`hands.${currentUser.uid}`]: currentHand,
                             shared_cards: newSharedCards
@@ -369,6 +386,56 @@
                 errorMessage.textContent = "Error playing card. Please try again.";
             }
         }
+
+        // --- Chat Logic ---
+        function subscribeToChat(roomCode) {
+            const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
+            const q = query(messagesRef, orderBy("timestamp"));
+
+            if(unsubscribeFromChat) unsubscribeFromChat();
+
+            unsubscribeFromChat = onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('p-2', 'rounded-lg', 'max-w-xs');
+
+                    if (msg.senderId === currentUser.uid) {
+                        msgDiv.classList.add('bg-blue-600', 'self-end', 'ml-auto');
+                        msgDiv.innerHTML = `<p class="text-white">${msg.text}</p>`;
+                    } else {
+                        msgDiv.classList.add('bg-gray-600', 'self-start', 'mr-auto');
+                        msgDiv.innerHTML = `<p class="font-bold text-xs text-cyan-300">${msg.senderName}</p><p class="text-white">${msg.text}</p>`;
+                    }
+                    chatMessages.appendChild(msgDiv);
+                });
+                // Auto-scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = chatInput.value.trim();
+            if (messageText && currentUser) {
+                const roomCode = roomCodeInput.value.trim().toLowerCase();
+                const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
+                
+                try {
+                    await addDoc(messagesRef, {
+                        text: messageText,
+                        senderId: currentUser.uid,
+                        senderName: playerNameInput.value.trim(),
+                        timestamp: serverTimestamp()
+                    });
+                    chatInput.value = ''; // Clear input
+                } catch (error) {
+                    console.error("Error sending message: ", error);
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
