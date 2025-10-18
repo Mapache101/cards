@@ -67,7 +67,7 @@
             <div class="text-right">
                 <p>You: <span id="player-name-display" class="font-bold"></span> (<span id="player-id-display" class="font-mono text-xs"></span>)</p>
                 <div id="opponent-info" class="hidden p-2 rounded-lg mt-1">
-                    Opponent: <span id="opponent-name-display" class="font-bold"></span>
+                     Opponent: <span id="opponent-name-display" class="font-bold"></span>
                 </div>
             </div>
         </div>
@@ -82,8 +82,8 @@
         <div id="player-hand-container" class="w-full">
             <h2 class="text-lg font-semibold mb-2">Your Hand</h2>
             <div id="player-hand" class="w-full bg-black bg-opacity-30 rounded-xl p-4 flex items-center justify-center gap-4">
-                <!-- Player's cards will appear here -->
-                <p class="text-gray-300">Waiting for game to start...</p>
+                 <!-- Player's cards will appear here -->
+                 <p class="text-gray-300">Waiting for game to start...</p>
             </div>
         </div>
     </main>
@@ -94,7 +94,8 @@
             <h2 class="text-3xl font-bold text-center mb-6">Join a Game</h2>
             <div class="space-y-4">
                 <input id="player-name-input" type="text" placeholder="Enter your name" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input id="room-code-input" type="text" placeholder="Enter room code" class="w-full p-3 bg-gamma-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <!-- CORRECTED LINE: bg-gamma-700 is now bg-gray-700 -->
+                <input id="room-code-input" type="text" placeholder="Enter room code" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
              <p id="error-message" class="text-red-400 text-sm mt-4 h-5 text-center"></p>
             <button id="join-game-btn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">Join / Create Game</button>
@@ -105,21 +106,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Firebase Config ---
-        // PASTE YOUR FIREBASE CONFIG OBJECT HERE (from Step 2)
-        const firebaseConfig = {
-          apiKey: "AIzaSyAuqL-tWaJu17TfmYngDG1fCYjHmStVbt0",
-          authDomain: "card-game-v1-ee4a0.firebaseapp.com",
-          projectId: "card-game-v1-ee4a0",
-          storageBucket: "card-game-v1-ee4a0.firebasestorage.app",
-          messagingSenderId: "369430567133",
-          appId: "1:369430567133:web:c573a3a00dacf100c72334"
-        };
-        
-        // This is a unique identifier for your app's data in Firestore
-        const appId = 'multiplayer-card-game-v1';
+        // --- Firebase Config (Provided by Environment) ---
+        // CORRECTED: Using secure environment variables instead of hardcoded keys
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-card-game';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
         // --- DOM Elements ---
         const loginModal = document.getElementById('login-modal');
@@ -380,3 +372,4 @@
     </script>
 </body>
 </html>
+
