@@ -139,9 +139,15 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, serverTimestamp, runTransaction, collection, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Firebase Config (Provided by Environment) ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-card-game';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAuqL-tWaJu17TfmYngDG1fCYjHmStVbt0",
+  authDomain: "card-game-v1-ee4a0.firebaseapp.com",
+  projectId: "card-game-v1-ee4a0",
+  storageBucket: "card-game-v1-ee4a0.firebasestorage.app",
+  messagingSenderId: "369430567133",
+  appId: "1:369430567133:web:c573a3a00dacf100c72334"
+};
 
         // --- DOM Elements ---
         const loginModal = document.getElementById('login-modal');
