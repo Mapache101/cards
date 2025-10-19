@@ -3,53 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2-Player Card Game Prototype</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+    <title>Neon Minimalist Card Game</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💠</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <script src="https://cdn/tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Bungee+Outline&family=Rubik+Mono+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Maximalism Base Styles */
+        /* Neon Minimalist Design System */
+        :root {
+            --bg-dark: #0D0D1A;
+            --bg-glass: rgba(20, 20, 35, 0.5);
+            --neon-green: #39FF14;
+            --neon-pink: #FF00FF;
+            --text-light: #E0E0E0;
+            --text-dark: #111111;
+            --border-color: rgba(57, 255, 20, 0.3);
+            --card-width: 150px;
+        }
+
         body {
-            font-family: 'Rubik Mono One', monospace; /* Bold, exaggerated typeface */
-            background-image: url('https://images.pexels.com/photos/17697361/pexels-photo-17697361/free-photo-of-geometric-pattern-colorful-background.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); /* Abstract, busy background */
-            background-size: cover;
-            background-position: center;
-            color: #FFEA00; /* Vibrant, contrasting base text color */
-            text-shadow: 2px 2px #E90064; /* Exaggerated text shadow */
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, #000000, #004D4D);
+            color: var(--text-light);
         }
 
         * {
             user-select: none;
-            box-sizing: border-box; /* Good practice */
+            box-sizing: border-box;
         }
 
-        /* Game containers - even more opaque and bold */
-        #game-container, #login-modal {
-            background-color: rgba(14, 0, 82, 0.9); /* Deep, rich contrasting background */
-            border: 5px solid #00F0FF; /* Bright, neon border */
-            box-shadow: 0 0 20px 5px rgba(0, 240, 255, 0.7); /* Glowing effect */
+        /* Glassmorphism Containers */
+        #game-container, #login-modal > div, #chat-container {
+            background-color: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
         }
 
-        /* New Card Styles - Maximalist Takeover */
-        :root {
-            --card-width: 150px; /* Adjusted for game layout */
-        }
-
+        /* Minimalist Card Styles */
         .card-container {
             width: var(--card-width);
             height: calc(var(--card-width) * 1.4);
-            perspective: 2000px;
+            perspective: 1000px;
             cursor: grab;
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
-            filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.7)); /* Stronger shadow */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .card-container:hover {
-            transform: translateY(-20px) scale(1.15) rotateZ(5deg); /* More dramatic hover */
+            transform: translateY(-15px) scale(1.08);
             z-index: 1000;
-            box-shadow: 0 15px 30px rgba(255, 0, 255, 0.8); /* Intense hover glow */
+            filter: drop-shadow(0 0 15px var(--neon-green));
         }
 
         .card {
@@ -57,160 +64,59 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Exaggerated flip animation */
-             transform: rotateY(180deg);
+            transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+            transform: rotateY(180deg);
         }
 
         .card-face {
             position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
-            border-radius: calc(var(--card-width) * 0.08); /* More pronounced rounded corners */
+            border-radius: 4px;
             overflow: hidden;
-            border: 4px solid #FF00FF; /* Bold card face border */
-            box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.5), 0 0 10px rgba(0, 0, 0, 0.5);
+            background-color: #10101b;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-back {
-            font-family: "Bungee Outline", cursive; /* Wild, abstract font for back */
-            text-align: center;
-            color: #FF00FF; /* Bright magenta */
             transform: rotateY(180deg);
-            background-color: #00FFC2; /* Vibrant turquoise */
-            display: flex; /* Centering for the "card" text */
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem; /* Larger text */
-            text-shadow: 3px 3px #E90064;
+            color: var(--neon-green);
         }
-        
-        /* Maximalist Card Back */
-        .card-back .card-border {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(45deg, #FF00FF 0 5%, #FFEA00 5% 10%); /* Busy repeating pattern */
-            border-radius: inherit;
-            opacity: 0.8;
-            transform: scale(1.02); /* Slightly larger to peek through */
+        .card-back svg {
+            width: 50%;
+            height: 50%;
+            stroke-width: 1;
+            filter: drop-shadow(0 0 5px var(--neon-green));
         }
-        .card-back .card-image-bg {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            --border-width: 10px; /* Thinner border to reveal more pattern */
-            left: var(--border-width);
-            top: var(--border-width);
-            width: calc(100% - var(--border-width) * 2);
-            height: calc(100% - var(--border-width) * 2);
-            overflow: hidden;
-            background-image: url('https://images.pexels.com/photos/10317544/pexels-photo-10317544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); /* Abstract pattern */
-            background-size: cover;
-            background-position: center;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Abstract shape */
-            border: 4px dashed #E90064; /* Another contrasting border */
-            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.7);
-        }
-        .card-back .card-text {
-            position: relative;
-            z-index: 10;
-            line-height: 0.8; /* Tighter line height */
-        }
-        .card-back .card-text::before {
-            content: "CARD";
-            display: block;
-            font-size: 0.5em; /* Smaller "CARD" */
-            font-family: 'Luckiest Guy', cursive;
-            color: #FFEA00;
-            text-shadow: 2px 2px #00F0FF;
-            transform: rotateZ(-5deg); /* Slight rotation */
-            margin-bottom: -10px;
-        }
-        .card-back .card-text::after {
-            content: "GAME";
-            display: block;
-            font-size: 0.5em; /* Smaller "GAME" */
-            font-family: 'Luckiest Guy', cursive;
-            color: #E90064;
-            text-shadow: 2px 2px #FF00FF;
-            transform: rotateZ(5deg); /* Slight rotation */
-            margin-top: -10px;
-        }
-
 
         .card-front {
-            font-family: 'Rubik Mono One', monospace;
-            font-weight: 700;
-            color: #FF00FF; /* Magenta text */
-            text-shadow: 1px 1px #00F0FF; /* Cyan shadow */
-            background: linear-gradient(135deg, #FFEA00, #E90064); /* Bold gradient */
+            padding: 10px;
+            justify-content: flex-end;
         }
         
-        .card-front .card-border {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(-45deg, #00F0FF 0 5px, #FFEA00 5px 10px); /* Busy border pattern */
-            border-radius: inherit;
-            opacity: 0.9;
-        }
-        .card-front .card-body {
-            --border-width: 10px; /* Thinner border */
+        .card-image {
             position: absolute;
-            left: var(--border-width);
-            top: var(--border-width);
-            width: calc(100% - var(--border-width) * 2);
-            height: calc(100% - var(--border-width) * 2);
-            overflow: hidden;
-            background-color: #1a0033; /* Dark inner background */
-            border: 2px dashed #FFEA00; /* Neon dashed border */
-            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.5);
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: 65%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 2px;
+            border: 1px solid var(--border-color);
         }
-        .card-front .card-body-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-             background-image: url('https://images.pexels.com/photos/17697361/pexels-photo-17697361/free-photo-of-geometric-pattern-colorful-background.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); /* Abstract background pattern */
-             background-size: cover;
-             opacity: 0.3; /* Subtle background */
-             filter: blur(1px);
-        }
-        .card-front .primary-image {
-             width: 85%; /* Slightly smaller */
-             height: 55%; /* Taller image area */
-             margin: 8% auto 0; /* Adjusted margin */
-             overflow: hidden;
-             position: relative;
-             border: 5px groove #FF00FF; /* Ornate border */
-             box-shadow: 0 0 15px 5px rgba(255, 0, 255, 0.7); /* Magenta glow */
-             clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%); /* Complex polygon shape */
-        }
-        .card-front .primary-image-bg {
-             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-             background-color: #0050FF; /* Electric blue background */
-             z-index: 1;
-             opacity: 0.7;
-        }
-        .card-front .primary-image-fg {
-             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-             background-size: cover;
-             background-repeat: no-repeat;
-             background-position: center;
-             z-index: 2;
-             filter: saturate(1.5) contrast(1.2); /* Enhance image colors */
-        }
-        .card-front .creature-name {
-            font-family: 'Luckiest Guy', cursive; /* Fun, bold name font */
-            font-weight: bold;
+        
+        .card-name {
+            font-size: 0.9rem;
+            font-weight: 600;
             text-align: center;
-            margin-top: 10px; /* More space */
-            font-size: 1rem; /* Larger font size */
-            color: #FFEA00; /* Yellow name */
-            text-shadow: 2px 2px #E90064; /* Pink shadow */
-            background: rgba(0, 0, 0, 0.4);
-            padding: 2px 5px;
-            border-radius: 5px;
-            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
-            margin-left: 5px; margin-right: 5px;
+            color: var(--neon-green);
+            text-shadow: 0 0 4px var(--neon-green);
         }
 
         /* Player Hand Hover Effect */
@@ -223,177 +129,189 @@
             transform: rotateY(0deg);
         }
         
-        /* General UI Styles - Maximalist Touch */
+        /* General UI Styles */
         #shared-area {
             min-height: 200px;
-            border: 4px dashed #FFEA00; /* Bright yellow dashed border */
-            background-color: rgba(255, 0, 255, 0.3); /* Magenta tint */
-            transition: background-color 0.3s;
-            box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.7);
+            border: 2px dashed var(--border-color);
+            background-color: transparent;
+            transition: background-color 0.3s, border-color 0.3s;
         }
         #shared-area.drag-hover {
-            background-color: rgba(0, 255, 0, 0.4); /* Neon green hover */
-            border-color: #00FFC2;
-            box-shadow: inset 0 0 25px rgba(0, 255, 194, 0.9);
+            background-color: rgba(57, 255, 20, 0.1);
+            border-color: var(--neon-green);
         }
 
         #player-hand {
             min-height: calc(var(--card-width) * 1.4 + 40px);
-            background-color: rgba(0, 240, 255, 0.2); /* Cyan tint */
-            border: 3px solid #E90064; /* Pink border */
-            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.5);
         }
+        
         #opponent-info {
-            background-color: rgba(255, 0, 255, 0.4); /* Magenta opponent box */
-            border: 2px solid #FFEA00; /* Yellow border */
-            text-shadow: 1px 1px #00F0FF;
+           border: 1px solid var(--border-color);
+           background-color: var(--bg-glass);
         }
 
-        /* Titles and headers */
+        /* Typography */
         h1, h2 {
-            font-family: 'Luckiest Guy', cursive; /* Distinct title font */
-            color: #FFEA00; /* Yellow titles */
-            text-shadow: 3px 3px #E90064; /* Pink shadow */
+            font-weight: 700;
+            color: var(--text-light);
+            text-shadow: 0 0 8px var(--neon-green);
         }
-        h1 { font-size: 2.5rem; }
-        h2 { font-size: 1.8rem; }
+        h1 { font-size: 1.8rem; letter-spacing: 1px;}
+        h2 { font-size: 1.25rem; }
 
-        /* Buttons */
+        /* Buttons & Inputs */
         button {
-            font-family: 'Rubik Mono One', monospace;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border: 3px solid #00F0FF; /* Cyan border */
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7); /* Cyan glow */
+            border: none;
+            border-radius: 4px;
             transition: all 0.2s ease-in-out;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
         }
         button:hover {
-            box-shadow: 0 0 25px rgba(255, 0, 255, 0.9); /* Magenta glow on hover */
             transform: scale(1.05);
-            border-color: #FF00FF; /* Magenta border on hover */
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.8);
         }
-        .bg-blue-600 { background-color: #0050FF; } /* Electric blue */
-        .hover\:bg-blue-700:hover { background-color: #0070FF; }
-        .bg-red-600 { background-color: #E90064; } /* Deep pink */
-        .hover\:bg-red-700:hover { background-color: #FF0070; }
-
-
-        /* Chat Area - Bold and Contrasting */
-        #chat-container {
-            background-color: rgba(0, 80, 255, 0.5); /* Blue tinted chat background */
-            border: 4px solid #FF00FF; /* Magenta border */
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        .btn-primary {
+            background-color: var(--neon-green);
+            color: var(--text-dark);
         }
+        .btn-secondary {
+            background-color: var(--neon-pink);
+            color: var(--text-dark);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        .btn-secondary:hover {
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+
+        input[type="text"] {
+             background-color: rgba(0,0,0,0.3);
+             border: 1px solid var(--border-color);
+             border-radius: 4px;
+             color: var(--text-light);
+             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(224, 224, 224, 0.5);
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--neon-green);
+            box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+        }
+
+        /* Chat Area */
         #chat-messages {
             overflow-y: auto;
-            max-height: 400px; /* Limit height */
+            max-height: 400px;
         }
-        #chat-messages::-webkit-scrollbar { width: 8px; }
-        #chat-messages::-webkit-scrollbar-track { background: rgba(255, 0, 255, 0.2); border-radius: 10px; }
-        #chat-messages::-webkit-scrollbar-thumb { background: #FFEA00; border-radius: 10px; border: 1px solid #E90064; }
+        #chat-messages::-webkit-scrollbar { width: 6px; }
+        #chat-messages::-webkit-scrollbar-track { background: transparent; }
+        #chat-messages::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 2px; }
 
-        #chat-input {
-            background-color: #1a0033; /* Dark input */
-            border: 2px solid #FFEA00; /* Yellow border */
-            color: #FFEA00;
-            text-shadow: 1px 1px #E90064;
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 6px;
+            max-width: 80%;
         }
-        #chat-input::placeholder { color: rgba(255, 234, 0, 0.6); }
+        .chat-bubble.mine {
+            background-color: var(--neon-green);
+            color: var(--text-dark);
+            border-bottom-right-radius: 2px;
+            align-self: flex-end;
+        }
+        .chat-bubble.theirs {
+            background-color: #2a2a3a;
+            color: var(--text-light);
+            border-bottom-left-radius: 2px;
+            align-self: flex-start;
+        }
+         .chat-bubble.theirs .sender-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--neon-pink);
+            margin-bottom: 2px;
+        }
 
-        /* Login Modal - Also Maximalist */
-        #login-modal > div {
-            background-color: #0A002A; /* Even darker blue for modal */
-            border: 6px double #FF00FF; /* Double border effect */
-            box-shadow: 0 0 30px 10px rgba(255, 0, 255, 0.8), inset 0 0 15px rgba(0, 240, 255, 0.5);
-        }
-        #login-modal h2 {
-            color: #FFEA00;
-            text-shadow: 4px 4px #E90064;
-            font-size: 3.5rem; /* Massive title */
-            line-height: 1;
-        }
-        #error-message {
-            color: #FF00FF; /* Error messages stand out */
-            text-shadow: 1px 1px #FFEA00;
-        }
-
-        /* Player info */
-        #player-name-display, #opponent-name-display {
-            color: #00F0FF;
-            text-shadow: 1px 1px #E90064;
-        }
-        #player-id-display {
-            color: #FFEA00;
-            text-shadow: none;
-        }
-        #room-code-display {
-             background-color: rgba(255, 0, 255, 0.4);
-             color: #00F0FF;
-             text-shadow: 1px 1px #FFEA00;
-        }
+        /* Other UI elements */
+        #error-message { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+        #player-name-display, #opponent-name-display { color: var(--neon-green); }
+        #room-code-display { background-color: rgba(0,0,0,0.4); color: var(--neon-pink); }
         
     </style>
 </head>
 <body class="w-screen h-screen overflow-hidden">
 
-    <!-- Game UI (hidden by default) --><main id="game-container" class="hidden h-full flex flex-col md:flex-row p-4 md:p-8 gap-4">
-        <!-- Main Game Area --><div class="flex-grow flex flex-col space-y-4">
-            <div class="flex justify-between items-center p-2 rounded-lg" style="background-color: rgba(0,0,0,0.3);">
+    <!-- Game UI (hidden by default) -->
+    <main id="game-container" class="hidden h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 rounded-none md:rounded-lg m-0 md:m-4">
+        <!-- Main Game Area -->
+        <div class="flex-grow flex flex-col space-y-4">
+            <div class="flex justify-between items-center p-2">
                 <div>
-                    <h1 class="text-xl font-bold">Maximalist Cards</h1>
-                    <p class="text-sm">Room Code: <span id="room-code-display" class="font-mono bg-gray-800 px-2 py-1 rounded"></span></p>
+                    <h1 class="text-xl font-bold">Neon Grid</h1>
+                    <p class="text-sm">Room: <span id="room-code-display" class="font-mono px-2 py-1 rounded"></span></p>
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="text-right">
-                        <p>You: <span id="player-name-display" class="font-bold"></span> (<span id="player-id-display" class="font-mono text-xs"></span>)</p>
-                        <div id="opponent-info" class="hidden p-2 rounded-lg mt-1">
-                             Opponent: <span id="opponent-name-display" class="font-bold"></span>
+                        <p>You: <span id="player-name-display" class="font-bold"></span> (<span id="player-id-display" class="font-mono text-xs opacity-70"></span>)</p>
+                        <div id="opponent-info" class="hidden p-2 rounded mt-2">
+                            Opponent: <span id="opponent-name-display" class="font-bold"></span>
                         </div>
                     </div>
-                    <button id="leave-game-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Leave</button>
+                    <button id="leave-game-btn" class="btn-secondary py-2 px-4 rounded">Leave</button>
                 </div>
             </div>
 
-            <!-- Shared Playing Area --><div id="shared-area" class="flex-grow w-full rounded-xl p-4 flex items-center justify-center gap-4 flex-wrap">
-                <p class="text-gray-300">Shared Area - Drag cards here to play</p>
+            <!-- Shared Playing Area -->
+            <div id="shared-area" class="flex-grow w-full rounded-lg p-4 flex items-center justify-center gap-4 flex-wrap">
+                <p class="opacity-50">Shared Area</p>
             </div>
 
-            <!-- Player's Hand --><div id="player-hand-container" class="w-full">
-                <h2 class="text-lg font-semibold mb-2">Your Hand (Hover over cards to flip)</h2>
-                <div id="player-hand" class="w-full bg-black bg-opacity-30 rounded-xl p-4 flex items-center justify-center gap-4">
-                     <p class="text-gray-300">Waiting for game to start...</p>
+            <!-- Player's Hand -->
+            <div>
+                <h2 class="text-lg font-semibold mb-2 ml-2">Your Hand</h2>
+                <div id="player-hand" class="w-full rounded-lg p-4 flex items-center justify-center gap-4">
+                     <p class="opacity-50">Waiting for game to start...</p>
                 </div>
             </div>
         </div>
-        <!-- Chat Area --><div id="chat-container" class="w-full md:w-80 lg:w-96 bg-black bg-opacity-40 rounded-xl flex flex-col p-4">
-            <h2 class="text-lg font-semibold mb-2 border-b border-gray-600 pb-2">Chat</h2>
-            <div id="chat-messages" class="flex-grow overflow-y-auto pr-2 space-y-2"></div>
-            <form id="chat-form" class="mt-4 flex gap-2">
-                <input id="chat-input" type="text" placeholder="Type a message..." class="flex-grow p-2 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Send</button>
+        <!-- Chat Area -->
+        <div id="chat-container" class="w-full md:w-80 lg:w-96 rounded-lg flex flex-col p-4">
+            <h2 class="text-lg font-semibold mb-2 border-b pb-2" style="border-color: var(--border-color);">Chat</h2>
+            <div id="chat-messages" class="flex-grow pr-2 space-y-3 flex flex-col"></div>
+            <form id="chat-form" class="flex gap-2" style="margin-top: 30%;">
+                <input id="chat-input" type="text" placeholder="Type a message..." class="flex-grow p-2">
+                <button type="submit" class="btn-primary py-2 px-4 rounded">Send</button>
             </form>
         </div>
     </main>
 
-    <!-- Login Modal (visible by default) --><div id="login-modal" class="absolute inset-0 flex items-center justify-center">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm">
+    <!-- Login Modal (visible by default) -->
+    <div id="login-modal" class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="p-8 rounded-lg w-full max-w-sm">
             <h2 class="text-3xl font-bold text-center mb-6">Join a Game</h2>
             <div class="space-y-4">
-                <input id="player-name-input" type="text" placeholder="Enter your name" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input id="room-code-input" type="text" placeholder="Enter room code" class="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input id="player-name-input" type="text" placeholder="Enter your name" class="w-full p-3">
+                <input id="room-code-input" type="text" placeholder="Enter room code" class="w-full p-3">
             </div>
-             <p id="error-message" class="text-red-400 text-sm mt-4 h-5 text-center"></p>
-            <button id="join-game-btn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">Join / Create Game</button>
+             <p id="error-message" class="text-center h-5 mt-4"></p>
+            <button id="join-game-btn" class="w-full mt-4 btn-primary py-3">Join / Create</button>
         </div>
     </div>
 
-    <!-- Firebase SDKs --><script type="module">
+    <!-- Firebase SDKs -->
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, runTransaction, collection, addDoc, query, orderBy, serverTimestamp, getDoc, updateDoc, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = 'card-game-maximalist-v1'; // Changed appId for new version
+        // Using a new appId to avoid conflicts with the old design's database entries
+        const appId = 'card-game-minimalist-v2';
 
+        // NOTE: Replace with your actual Firebase config
         const firebaseConfig = {
           apiKey: "AIzaSyAuqL-tWaJu17TfmYngDG1fCYjHmStVbt0",
           authDomain: "card-game-v1-ee4a0.firebaseapp.com",
@@ -484,8 +402,9 @@
                     gameContainer.classList.remove('hidden');
                 } catch (error) {
                     errorMessage.textContent = error.message;
+                } finally {
                     joinButton.disabled = false;
-                    joinButton.textContent = "Join / Create Game";
+                    joinButton.textContent = "Join / Create";
                 }
             });
 
@@ -531,7 +450,6 @@
                     if(doc.exists()){
                         renderGameState(doc.data(), roomCode);
                     } else {
-                        // The room was deleted, so reset the UI
                         resetUI();
                         errorMessage.textContent = `Room "${roomCode}" was closed.`;
                     }
@@ -540,7 +458,7 @@
             }
             
             function renderGameState(gameData, roomCode) {
-                if (!currentUser || !gameData.players[currentUser.uid]) return;
+                if (!currentUser || !gameData.players || !gameData.players[currentUser.uid]) return;
 
                 const myHand = gameData.hands[currentUser.uid] || [];
                 const sharedCards = gameData.shared_cards || [];
@@ -560,17 +478,17 @@
                 sharedArea.innerHTML = '';
                 if (sharedCards.length > 0) {
                     sharedCards.forEach(cardData => {
-                        const cardEl = createCardElement(cardData, 'shared');
+                        const cardEl = createCardElement(cardData);
                         sharedArea.appendChild(cardEl);
                     });
                 } else {
-                    sharedArea.innerHTML = `<p class="text-gray-300">Shared Area - Drag cards here to play</p>`;
+                    sharedArea.innerHTML = `<p class="opacity-50">Shared Area</p>`;
                 }
 
                 playerHand.innerHTML = '';
                 if(myHand.length > 0) {
                     myHand.forEach(cardData => {
-                        const cardEl = createCardElement(cardData, 'hand');
+                        const cardEl = createCardElement(cardData);
                         cardEl.draggable = true;
                         cardEl.addEventListener('dragstart', (e) => {
                            e.dataTransfer.setData('application/json', JSON.stringify(cardData));
@@ -579,31 +497,23 @@
                         playerHand.appendChild(cardEl);
                     });
                 } else {
-                    playerHand.innerHTML = `<p class="text-gray-300">Your hand is empty</p>`;
+                    playerHand.innerHTML = `<p class="opacity-50">Your hand is empty</p>`;
                 }
             }
             
-            function createCardElement(cardData, location) {
+            function createCardElement(cardData) {
                 const container = document.createElement('div');
                 container.className = 'card-container';
-
                 container.innerHTML = `
                     <div class="card">
                         <div class="card-face card-back">
-                            <div class="card-border"></div>
-                            <div class="card-image-bg"></div>
-                            <div class="card-text">Maximalism</div>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                            </svg>
                         </div>
                         <div class="card-face card-front">
-                            <div class="card-border"></div>
-                            <div class="card-body">
-                                <div class="card-body-bg"></div>
-                                <div class="primary-image">
-                                    <div class="primary-image-bg"></div>
-                                    <div class="primary-image-fg" style="background-image: url('${cardData.img}')"></div>
-                                </div>
-                                <div class="creature-name">${cardData.name}</div>
-                            </div>
+                            <div class="card-image" style="background-image: url('${cardData.img}')"></div>
+                            <div class="card-name">${cardData.name}</div>
                         </div>
                     </div>
                 `;
@@ -616,7 +526,7 @@
                 sharedArea.classList.add('drag-hover');
             });
             sharedArea.addEventListener('dragleave', () => {
-                 sharedArea.classList.remove('drag-hover');
+                sharedArea.classList.remove('drag-hover');
             });
             sharedArea.addEventListener('drop', async (e) => {
                 e.preventDefault();
@@ -651,34 +561,28 @@
                     console.error("Failed to play card:", error);
                 }
             }
-
-            // --- Leave Game Logic ---
+            
             leaveGameBtn.addEventListener('click', () => leaveGame(db));
 
             async function leaveGame(db) {
                 if (!currentUser) return;
                 const roomCode = roomCodeDisplay.textContent.trim().toLowerCase();
                 if (!roomCode) return;
-
                 const roomRef = doc(db, `artifacts/${appId}/public/data/card-games`, roomCode);
-
                 try {
                     const roomDoc = await getDoc(roomRef);
                     if (roomDoc.exists()) {
                         const gameData = roomDoc.data();
-                        // Get current player count by checking actual player keys, not just player_count field
                         const activePlayerIds = Object.keys(gameData.players || {});
                         const playerCount = activePlayerIds.length;
-
                         if (playerCount > 1) {
-                            // More than one player, just remove this player
-                            const updates = {};
-                            updates[`players.${currentUser.uid}`] = deleteField();
-                            updates[`hands.${currentUser.uid}`] = deleteField(); // Also remove their hand
-                            updates.player_count = playerCount - 1;
+                            const updates = {
+                                [`players.${currentUser.uid}`]: deleteField(),
+                                [`hands.${currentUser.uid}`]: deleteField(),
+                                player_count: playerCount - 1
+                            };
                             await updateDoc(roomRef, updates);
                         } else {
-                            // Last player is leaving, delete the whole room
                             await deleteDoc(roomRef);
                         }
                     }
@@ -690,41 +594,34 @@
             }
 
             function resetUI() {
-                // Unsubscribe from listeners
                 if (unsubscribeFromGame) unsubscribeFromGame();
                 if (unsubscribeFromChat) unsubscribeFromChat();
                 unsubscribeFromGame = null;
                 unsubscribeFromChat = null;
-
-                // Show login, hide game
                 loginModal.classList.remove('hidden');
                 gameContainer.classList.add('hidden');
-
-                // Reset buttons and inputs
                 joinButton.disabled = false;
                 joinButton.textContent = "Join / Create Game";
                 errorMessage.textContent = "";
-                // Note: Not clearing playerNameInput or roomCodeInput so user can easily rejoin or fix typo
             }
-
 
             function subscribeToChat(roomCode, db) {
                 const messagesRef = collection(db, `artifacts/${appId}/public/data/card-games`, roomCode, 'messages');
-                const q = query(messagesRef, orderBy("timestamp"));
+                const q = query(messagesRef, orderBy("timestamp", "desc"), /*limit(50)*/); // Sorting might need an index
                 if(unsubscribeFromChat) unsubscribeFromChat();
                 unsubscribeFromChat = onSnapshot(q, (snapshot) => {
                     chatMessages.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const msg = doc.data();
+                    const messages = [];
+                    snapshot.forEach(doc => messages.push(doc.data()));
+                    messages.reverse().forEach(msg => {
                         const msgDiv = document.createElement('div');
-                        msgDiv.classList.add('p-2', 'rounded-lg', 'max-w-xs');
-                        // Maximalist chat bubbles
+                        msgDiv.classList.add('chat-bubble');
                         if (msg.senderId === currentUser.uid) {
-                            msgDiv.classList.add('bg-purple-700', 'text-yellow-300', 'self-end', 'ml-auto', 'border-2', 'border-pink-500', 'shadow-lg');
+                            msgDiv.classList.add('mine');
                             msgDiv.innerHTML = `<p>${msg.text}</p>`;
                         } else {
-                            msgDiv.classList.add('bg-pink-500', 'text-cyan-200', 'self-start', 'mr-auto', 'border-2', 'border-purple-700', 'shadow-lg');
-                            msgDiv.innerHTML = `<p class="font-bold text-xs text-yellow-300">${msg.senderName}</p><p>${msg.text}</p>`;
+                            msgDiv.classList.add('theirs');
+                            msgDiv.innerHTML = `<p class="sender-name">${msg.senderName}</p><p>${msg.text}</p>`;
                         }
                         chatMessages.appendChild(msgDiv);
                     });
@@ -755,4 +652,5 @@
     </script>
 </body>
 </html>
+
 
